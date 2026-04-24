@@ -1,0 +1,35 @@
+name: Mirror n8n to GHCR
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Sync n8n App
+        run: |
+          docker pull n8nio/n8n:latest
+          VERSION=$(docker inspect n8nio/n8n:latest --format='{{index .Config.Labels "org.opencontainers.image.version"}}')
+          if [[ $VERSION == 2.* ]]; then
+            docker tag n8nio/n8n:latest ghcr.io/${{ github.repository_owner }}/n8n:2
+            docker push ghcr.io/${{ github.repository_owner }}/n8n:2
+          fi
+
+      - name: Sync n8n Runner
+        run: |
+          docker pull n8nio/runners:latest
+          docker tag n8nio/runners:latest ghcr.io/${{ github.repository_owner }}/runners:2
+          docker push ghcr.io/${{ github.repository_owner }}/runners:2
