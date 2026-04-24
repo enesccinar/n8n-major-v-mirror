@@ -1,0 +1,44 @@
+
+services:
+  n8n:
+    image: ghcr.io/your-username/n8n:2
+    ports:
+      - "5678:5678"
+    labels:
+      - "com.centurylinklabs.watchtower.monitor-only=true"
+    # environment:
+      # TODO: Add environment variables
+    volumes:
+      - n8n-data:/home/node/.n8n
+    depends_on:
+      - db
+      - n8n-task-runner
+    restart: unless-stopped
+    networks:
+      - n8n_network
+
+  n8n-task-runner:
+    image: ghcr.io/your-username/runners:2
+    restart: always
+    labels:
+      - "com.centurylinklabs.watchtower.monitor-only=true"
+    # environment:
+      # TODO: Add environment variables
+
+  db:
+    image: postgres:12
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    # environment:
+      # TODO: Add environment variables
+    restart: unless-stopped
+    networks:
+      - n8n_network
+
+volumes:
+  db-data:
+  n8n-data:
+
+networks:
+  n8n_network:
+    external: true
